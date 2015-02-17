@@ -1,0 +1,22 @@
+record(ao, $(P)ao1)
+{
+        field( PREC, "6")
+}
+record(ao, $(P)ao2)
+{
+        field( PREC, "6")
+}
+
+record(longout, $(P)lo1)
+{
+}
+record(longout, $(P)lo2)
+{
+}
+
+
+record(cscript, "$(P)cscr1")
+{
+	field( DESC, "cscript record")
+        field( PREC, "6")
+}
