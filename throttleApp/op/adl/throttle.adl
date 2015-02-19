@@ -8,7 +8,7 @@ display {
 		x=995
 		y=168
 		width=300
-		height=200
+		height=160
 	}
 	clr=14
 	bclr=4
@@ -90,39 +90,6 @@ display {
 "text entry" {
 	object {
 		x=127
-		y=132
-		width=150
-		height=20
-	}
-	control {
-		chan="$(P)$(THR).INP"
-		clr=14
-		bclr=51
-	}
-	format="string"
-	limits {
-	}
-}
-rectangle {
-	object {
-		x=125
-		y=130
-		width=154
-		height=24
-	}
-	"basic attribute" {
-		clr=20
-		fill="outline"
-		width=2
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(THR).IV"
-	}
-}
-"text entry" {
-	object {
-		x=127
 		y=97
 		width=150
 		height=20
@@ -166,23 +133,10 @@ text {
 	textix="Output PV"
 	align="horiz. right"
 }
-text {
-	object {
-		x=40
-		y=130
-		width=80
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Readback PV"
-	align="horiz. right"
-}
 "text entry" {
 	object {
 		x=125
-		y=165
+		y=125
 		width=80
 		height=20
 	}
@@ -198,7 +152,7 @@ text {
 text {
 	object {
 		x=40
-		y=165
+		y=125
 		width=80
 		height=20
 	}
@@ -216,7 +170,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P)$(THR).RDBK"
+		chan="$(P)$(THR).SENT"
 		clr=14
 		bclr=55
 	}
@@ -262,6 +216,6 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="Readback"
+	textix="Sent"
 	align="horiz. right"
 }

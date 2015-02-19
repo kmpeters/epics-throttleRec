@@ -82,15 +82,17 @@ epicsExportAddress(rset,throttleRSET);
 static void checkAlarms(throttleRecord *prec);
 static void monitor(throttleRecord *prec);
 
+static void enterValue( throttleRecord *prec);
 static void delayFuncCallback();
+static void valuePut( throttleRecord *prec);
 
-static void checkLinksCallback();
-static void checkLinks();
+static void checkLinkCallback();
+static void checkLink();
 
 enum { NO_CA_LINKS, CA_LINKS_ALL_OK, CA_LINKS_NOT_OK };
 typedef struct rpvtStruct 
 {
-  double ival, oval;
+  double oval;
   double delay;
 
   int delay_flag;
@@ -110,8 +112,8 @@ static long init_record(void *precord,int pass)
   throttleRecord *prec = (throttleRecord *)precord;
   rpvtStruct  *prpvt;
 
-  struct link         *pinlink,      *poutlink;
-  unsigned short      *pInLinkValid, *pOutLinkValid;
+  struct link         *poutlink;
+  unsigned short      *pOutLinkValid;
   struct dbAddr        dbAddr;
 
   if( pass == 0) 
@@ -130,9 +132,7 @@ static long init_record(void *precord,int pass)
 
   /* start link management */
 
-  pinlink = &prec->inp;
   poutlink = &prec->out;
-  pInLinkValid = &prec->iv;
   pOutLinkValid = &prec->ov;
 
   prpvt->caLinkStat = NO_CA_LINKS; // as far as I know
@@ -140,46 +140,26 @@ static long init_record(void *precord,int pass)
   /* check output links */
   if (poutlink->type == CONSTANT) 
     {
-      *pOutLinkValid = throttleIV_CON;
+      *pOutLinkValid = throttleOV_CON;
     }
   else if (!dbNameToAddr(poutlink->value.pv_link.pvname, &dbAddr)) 
     {
-      *pOutLinkValid = throttleIV_LOC;
+      *pOutLinkValid = throttleOV_LOC;
     }
   else 
     {
-      *pOutLinkValid = throttleIV_EXT_NC;
+      *pOutLinkValid = throttleOV_EXT_NC;
       prpvt->caLinkStat = CA_LINKS_NOT_OK;
     }
   db_post_events(prec,pOutLinkValid,DBE_VALUE|DBE_LOG);
 
-  /* check input links  */
-  if (pinlink->type == CONSTANT) 
-    {
-      //          recGblInitConstantLink(pinlink,DBF_DOUBLE,pvalue);
-      //db_post_events(ptran, pvalue, DBE_VALUE|DBE_LOG);
-      *pInLinkValid = throttleIV_CON;
-    }
-  /* see if the PV resides on this ioc */
-  else if (!dbNameToAddr(pinlink->value.pv_link.pvname, &dbAddr)) 
-    {
-      *pInLinkValid = throttleIV_LOC;
-    }
-  /* pv is not on this ioc. Callback later for connection stat */
-  else 
-    {
-      *pInLinkValid = throttleIV_EXT_NC;
-      prpvt->caLinkStat = CA_LINKS_NOT_OK;
-    }
-  db_post_events(prec,pInLinkValid,DBE_VALUE|DBE_LOG);
-
   callbackSetCallback(delayFuncCallback, &prpvt->delayFuncCb);
-  callbackSetPriority(prec->prio, &prpvt->checkLinkCb);
-  callbackSetUser(prec, &prpvt->checkLinkCb);
+  callbackSetPriority(prec->prio, &prpvt->delayFuncCb);
+  callbackSetUser(prec, &prpvt->delayFuncCb);
   prpvt->delay_flag = 0;
   prpvt->wait_flag = 0;
 
-  callbackSetCallback(checkLinksCallback, &prpvt->checkLinkCb);
+  callbackSetCallback(checkLinkCallback, &prpvt->checkLinkCb);
   callbackSetPriority(prec->prio, &prpvt->checkLinkCb);
   callbackSetUser(prec, &prpvt->checkLinkCb);
   prpvt->pending_checkLinkCB = 0;
@@ -200,56 +180,16 @@ static long process(throttleRecord *prec)
 {
   rpvtStruct *prpvt = prec->rpvt;
 
-  struct link *plink;
-
-  long status;
-
   prec->pact = TRUE;
   prec->udf = FALSE;
 
   /* if some links are CA, check connections */
   if (prpvt->caLinkStat != NO_CA_LINKS) 
     {
-      checkLinks(prec);
+      checkLink(prec);
     }
+  enterValue( prec);
 
- /* Process output link. */
-  plink = &(prec->out);
-  if (plink->type != CONSTANT)
-    {
-      prpvt->oval = prec->val;
-
-      status = dbPutLink(plink, DBR_DOUBLE, &prpvt->oval, 1);
-      if( RTN_SUCCESS( status) )
-        prec->sts = throttleSTS_SUC;
-      else
-        prec->sts = throttleSTS_ERR;
-    }
-  else
-    prec->sts = throttleSTS_ERR;
-
-
-  if( prec->sts == throttleSTS_SUC)
-    {
-      /* Process input link. */
-      plink = &(prec->inp);
-      if( plink->type != CONSTANT) 
-        {
-          status = dbGetLink(plink, DBR_DOUBLE, &prpvt->ival, NULL, NULL);
-          if (!RTN_SUCCESS(status)) 
-            {
-              prpvt->ival = 0.0;
-            }
-          prec->rdbk = prpvt->ival;
-        }
-    }
-
-
-  recGblGetTimeStamp(prec);
-  /* check for alarms */
-  checkAlarms(prec);
-  /* check event list */
-  monitor(prec);
   /* process the forward scan link record */
   recGblFwdLink(prec);
 
@@ -283,56 +223,25 @@ static long special(DBADDR *paddr, int after)
 
   switch(fieldIndex) 
     {
-    case(throttleRecordINP):
-      lnkIndex = throttleRecordINP;
-
-      plink   = &prec->inp;
-      //          pvalue  = &ptran->a    + lnkIndex;
-      plinkValid = &prec->iv;
-              
-      if (plink->type == CONSTANT) 
-        {
-          *plinkValid = throttleIV_CON;
-        }
-      /* see if the PV resides on this ioc */
-      else if (!dbNameToAddr(plink->value.pv_link.pvname, &dbAddr)) 
-        {
-          *plinkValid = throttleIV_LOC;
-        }
-      /* pv is not on this ioc. Callback later for connection stat */
-      else 
-        {
-          *plinkValid = throttleIV_EXT_NC;
-          if (!prpvt->pending_checkLinkCB) 
-            {
-              prpvt->pending_checkLinkCB = 1;
-              callbackRequestDelayed(&prpvt->checkLinkCb, 0.5);
-              prpvt->caLinkStat = CA_LINKS_NOT_OK;
-            }
-        }
-      db_post_events(prec,plinkValid,DBE_VALUE|DBE_LOG);
-      break;
-
     case(throttleRecordOUT):
       lnkIndex = throttleRecordOUT;
 
       plink   = &prec->out;
-      //          pvalue  = &ptran->a    + lnkIndex;
       plinkValid = &prec->ov;
               
       if (plink->type == CONSTANT) 
         {
-          *plinkValid = throttleIV_CON;
+          *plinkValid = throttleOV_CON;
         }
       /* see if the PV resides on this ioc */
       else if (!dbNameToAddr(plink->value.pv_link.pvname, &dbAddr)) 
         {
-          *plinkValid = throttleIV_LOC;
+          *plinkValid = throttleOV_LOC;
         }
       /* pv is not on this ioc. Callback later for connection stat */
       else 
         {
-          *plinkValid = throttleIV_EXT_NC;
+          *plinkValid = throttleOV_EXT_NC;
           if (!prpvt->pending_checkLinkCB) 
             {
               prpvt->pending_checkLinkCB = 1;
@@ -346,9 +255,6 @@ static long special(DBADDR *paddr, int after)
 
     case(throttleRecordDLY):
       prpvt->delay = prec->dly;
-
-      printf("%g\n", prec->dly);
-      // this will do something else
       break;
 
     default:
@@ -404,24 +310,89 @@ static void monitor(throttleRecord *prec)
     if(monitor_mask)
 	db_post_events(prec,&prec->val,monitor_mask);
 
-    if(prec->ordbk != prec->rdbk) 
+    if(prec->osent != prec->sent) 
       {
 	monitor_mask |= DBE_VALUE|DBE_LOG;
-	prec->ordbk = prec->rdbk;
+	prec->osent = prec->sent;
       }
     if(monitor_mask)
-	db_post_events(prec,&prec->rdbk,monitor_mask);
+	db_post_events(prec,&prec->sent,monitor_mask);
 
     return;
 }
 
 
-static void delayFuncCallback(CALLBACK *pcallback)
+static void enterValue( throttleRecord *prec)
 {
+  rpvtStruct *prpvt = prec->rpvt;
 
+  //  printf("enterValue()\n");
+
+  prpvt->wait_flag = 1; // trigger send
+  if( !prpvt->delay_flag)
+    valuePut( prec);
+  // else it will be set at next callback
 }
 
-static void checkLinksCallback(CALLBACK *pcallback)
+static void delayFuncCallback(CALLBACK *pcallback)
+{
+  struct throttleRecord *prec;
+
+  //  printf("delayFuncCallback()\n");
+
+  callbackGetUser(prec, pcallback);
+  valuePut( prec);
+}
+
+static void valuePut( throttleRecord *prec)
+{
+  rpvtStruct *prpvt = prec->rpvt;
+
+  struct link *plink;
+
+  long status;
+
+  //  printf("valuePut(), wf%d, df%d\n", prpvt->wait_flag, prpvt->delay_flag);
+
+  if( prpvt->wait_flag)
+    {
+      /* Process output link. */
+      plink = &(prec->out);
+      if (plink->type != CONSTANT)
+        {
+          prpvt->oval = prec->val;
+          
+          status = dbPutLink(plink, DBR_DOUBLE, &prpvt->oval, 1);
+          if( RTN_SUCCESS( status) )
+            {
+              prec->sts = throttleSTS_SUC;
+              prec->sent = prpvt->oval;
+              db_post_events(prec,&prec->sent,DBE_VALUE);
+            }
+          else
+            prec->sts = throttleSTS_ERR;
+        }
+      else
+        prec->sts = throttleSTS_ERR;
+
+      prpvt->wait_flag = 0;
+      prpvt->delay_flag = 1;
+      callbackRequestDelayed(&prpvt->delayFuncCb, prpvt->delay);
+    }
+  else
+    {
+      prpvt->delay_flag = 0;
+    }
+
+  recGblGetTimeStamp(prec);
+  /* check for alarms */
+  checkAlarms(prec);
+  /* check event list */
+  monitor(prec);
+}
+
+
+static void checkLinkCallback(CALLBACK *pcallback)
 {
   struct throttleRecord *prec;
   struct rpvtStruct    *prpvt;
@@ -439,13 +410,13 @@ static void checkLinksCallback(CALLBACK *pcallback)
     {
       dbScanLock((struct dbCommon *)prec);
       prpvt->pending_checkLinkCB = 0;
-      checkLinks(prec);
+      checkLink(prec);
       dbScanUnlock((struct dbCommon *)prec);
     }
 }
 
 
-static void checkLinks(struct throttleRecord *prec)
+static void checkLink(struct throttleRecord *prec)
 {
   struct link *plink;
   struct rpvtStruct   *prpvt = (struct rpvtStruct *)prec->rpvt;
@@ -454,31 +425,6 @@ static void checkLinks(struct throttleRecord *prec)
   int caLinkNc = 0;
   unsigned short *plinkValid;
 
-  plink   = &prec->inp;
-  plinkValid = &prec->iv;
-
-  if (plink->type == CA_LINK) 
-    {
-      caLink = 1;
-      stat = dbCaIsLinkConnected(plink);
-      if (!stat && (*plinkValid == throttleIV_EXT_NC)) 
-        {
-          caLinkNc = 1;
-        }
-      else if (!stat && (*plinkValid == throttleIV_EXT)) 
-        {
-          *plinkValid = throttleIV_EXT_NC;
-          db_post_events(prec,plinkValid,DBE_VALUE|DBE_LOG);
-          caLinkNc = 1;
-        } 
-      else if (stat && (*plinkValid == throttleIV_EXT_NC)) 
-        {
-          *plinkValid = throttleIV_EXT;
-          db_post_events(prec,plinkValid,DBE_VALUE|DBE_LOG);
-        } 
-    }
-    
-
   plink   = &prec->out;
   plinkValid = &prec->ov;
 
@@ -486,19 +432,19 @@ static void checkLinks(struct throttleRecord *prec)
     {
       caLink = 1;
       stat = dbCaIsLinkConnected(plink);
-      if (!stat && (*plinkValid == throttleIV_EXT_NC)) 
+      if (!stat && (*plinkValid == throttleOV_EXT_NC)) 
         {
           caLinkNc = 1;
         }
-      else if (!stat && (*plinkValid == throttleIV_EXT)) 
+      else if (!stat && (*plinkValid == throttleOV_EXT)) 
         {
-          *plinkValid = throttleIV_EXT_NC;
+          *plinkValid = throttleOV_EXT_NC;
           db_post_events(prec,plinkValid,DBE_VALUE|DBE_LOG);
           caLinkNc = 1;
         } 
-      else if (stat && (*plinkValid == throttleIV_EXT_NC)) 
+      else if (stat && (*plinkValid == throttleOV_EXT_NC)) 
         {
-          *plinkValid = throttleIV_EXT;
+          *plinkValid = throttleOV_EXT;
           db_post_events(prec,plinkValid,DBE_VALUE|DBE_LOG);
         } 
     }

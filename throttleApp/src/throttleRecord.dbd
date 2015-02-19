@@ -3,11 +3,11 @@ menu(throttleSTS) {
         choice(throttleSTS_ERR,"Error")
         choice(throttleSTS_SUC,"Success")
 }
-menu(throttleIV) {
-        choice(throttleIV_EXT_NC,"Ext PV NC")
-        choice(throttleIV_EXT,"Ext PV OK")
-        choice(throttleIV_LOC,"Local PV")
-        choice(throttleIV_CON,"Constant")
+menu(throttleOV) {
+        choice(throttleOV_EXT_NC,"Ext PV NC")
+        choice(throttleOV_EXT,"Ext PV OK")
+        choice(throttleOV_LOC,"Local PV")
+        choice(throttleOV_CON,"Constant")
 }
 recordtype(throttle) {
         include "dbCommon.dbd" 
@@ -20,12 +20,12 @@ recordtype(throttle) {
                 special(SPC_NOMOD)
                 interest(3)
         }
-        field(RDBK,DBF_DOUBLE   ) {
-                prompt("Readback Value")
+        field(SENT,DBF_DOUBLE   ) {
+                prompt("Sent Value")
                 special(SPC_NOMOD)
         }
-        field(ORDBK,DBF_DOUBLE) {
-                prompt("Previous Readback Value")
+        field(OSENT,DBF_DOUBLE) {
+                prompt("Previous Sent Value")
                 special(SPC_NOMOD)
         }
 
@@ -58,34 +58,21 @@ recordtype(throttle) {
 
         field(DLY,DBF_DOUBLE) {
                 prompt("Delay value")
-                pp(TRUE)
+		special(SPC_MOD)
+                initial("1.0")
         }
 
-	field(INP,DBF_INLINK) {
-		prompt("Input")
-		promptgroup(GUI_COMMON)
-		special(SPC_MOD)
-		interest(1)
-	}
 	field(OUT,DBF_OUTLINK) {
 		prompt("Output")
 		promptgroup(GUI_COMMON)
 		special(SPC_MOD)
 		interest(1)
 	}
-
-	field(IV,DBF_MENU) {
-		prompt("Input link valid")
-		special(SPC_NOMOD)
-		interest(1)
-		menu(throttleIV)
-		initial("1")
-	}
 	field(OV,DBF_MENU) {
 		prompt("Output link valid")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(throttleIV)
+		menu(throttleOV)
 		initial("1")
 	}
 
