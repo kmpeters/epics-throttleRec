@@ -54,6 +54,11 @@ recordtype(throttle) {
                 promptgroup(GUI_DISPLAY)
                 interest(1)
         }
+        field(DPREC,DBF_SHORT) {
+                prompt("Delay Display Precision")
+                promptgroup(GUI_DISPLAY)
+                interest(1)
+        }
 
 
         field(DLY,DBF_DOUBLE) {

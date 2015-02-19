@@ -19,4 +19,5 @@ record(throttle, "$(P)$(THR)")
 {
 	field( DESC, "throttle record")
         field( PREC, "6")
+        field( DPREC, "3")
 }

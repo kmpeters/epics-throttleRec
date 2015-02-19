@@ -97,7 +97,6 @@ typedef struct rpvtStruct
 
   int delay_flag;
   int wait_flag;
-  double proposed;
 
   CALLBACK delayFuncCb;
 
@@ -129,6 +128,7 @@ static long init_record(void *precord,int pass)
   prec->val = 0;
 
   prpvt = prec->rpvt;
+  prpvt->delay = prec->delay;
 
   /* start link management */
 
@@ -269,12 +269,12 @@ static long special(DBADDR *paddr, int after)
 static long get_precision(dbAddr *paddr, long *precision)
 {
   throttleRecord *prec = (throttleRecord *)paddr->precord;
-  //  int fieldIndex = dbGetFieldIndex(paddr);
+  int fieldIndex = dbGetFieldIndex(paddr);
 
-  *precision = prec->prec;
-
-  /* if( fieldIndex != throttleRecordVAL)  */
-  /*   recGblGetPrec(paddr,precision); */
+  if( fieldIndex == throttleRecordDLY)
+    *precision = prec->dprec;
+  else
+    *precision = prec->prec;
 
   recGblGetPrec(paddr,precision);
 
