@@ -1,2 +1,2 @@
-medm -x -macro "P=throttleEx:,CS=cscr1" throttleApp/op/adl/throttle.adl &
+medm -x -macro "P=throttleEx:,THR=thr" throttleApp/op/adl/throttle.adl &
 

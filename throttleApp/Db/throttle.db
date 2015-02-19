@@ -15,8 +15,8 @@ record(longout, $(P)lo2)
 }
 
 
-record(cscript, "$(P)cscr1")
+record(throttle, "$(P)$(THR)")
 {
-	field( DESC, "cscript record")
+	field( DESC, "throttle record")
         field( PREC, "6")
 }
