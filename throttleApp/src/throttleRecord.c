@@ -82,6 +82,8 @@ epicsExportAddress(rset,throttleRSET);
 static void checkAlarms(throttleRecord *prec);
 static void monitor(throttleRecord *prec);
 
+static void delayFuncCallback();
+
 static void checkLinksCallback();
 static void checkLinks();
 
@@ -89,6 +91,13 @@ enum { NO_CA_LINKS, CA_LINKS_ALL_OK, CA_LINKS_NOT_OK };
 typedef struct rpvtStruct 
 {
   double ival, oval;
+  double delay;
+
+  int delay_flag;
+  int wait_flag;
+  double proposed;
+
+  CALLBACK delayFuncCb;
 
   CALLBACK checkLinkCb;
   short    pending_checkLinkCB;
@@ -108,16 +117,16 @@ static long init_record(void *precord,int pass)
   if( pass == 0) 
     {
       strcpy(prec->vers, VERSION);
-      prec->sts = throttleSTS_UNK;
       prec->rpvt = calloc(1, sizeof(struct rpvtStruct));
 
       return 0;
     }
 
+  
+  prec->sts = throttleSTS_UNK;
   prec->val = 0;
 
   prpvt = prec->rpvt;
-
 
   /* start link management */
 
@@ -164,7 +173,11 @@ static long init_record(void *precord,int pass)
     }
   db_post_events(prec,pInLinkValid,DBE_VALUE|DBE_LOG);
 
-
+  callbackSetCallback(delayFuncCallback, &prpvt->delayFuncCb);
+  callbackSetPriority(prec->prio, &prpvt->checkLinkCb);
+  callbackSetUser(prec, &prpvt->checkLinkCb);
+  prpvt->delay_flag = 0;
+  prpvt->wait_flag = 0;
 
   callbackSetCallback(checkLinksCallback, &prpvt->checkLinkCb);
   callbackSetPriority(prec->prio, &prpvt->checkLinkCb);
@@ -199,7 +212,6 @@ static long process(throttleRecord *prec)
     {
       checkLinks(prec);
     }
-
 
  /* Process output link. */
   plink = &(prec->out);
@@ -332,14 +344,12 @@ static long special(DBADDR *paddr, int after)
 
       break;
 
-    /* case(throttleRecordCHK): */
+    case(throttleRecordDLY):
+      prpvt->delay = prec->dly;
 
-    /*   // can only check if unchecked, error cleared by changing something */
-    /*   if( prec->sts != throttleSTS_UNC) */
-    /*     return 0; */
-
-    /*   checkCode( prec); */
-    /*   break; */
+      printf("%g\n", prec->dly);
+      // this will do something else
+      break;
 
     default:
       recGblDbaddrError(S_db_badChoice, paddr, "throttle: special");
@@ -405,6 +415,11 @@ static void monitor(throttleRecord *prec)
     return;
 }
 
+
+static void delayFuncCallback(CALLBACK *pcallback)
+{
+
+}
 
 static void checkLinksCallback(CALLBACK *pcallback)
 {
