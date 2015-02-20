@@ -80,7 +80,7 @@ epicsExportAddress(rset,throttleRSET);
 
 
 static void checkAlarms(throttleRecord *prec);
-static void monitor(throttleRecord *prec);
+//static void monitor(throttleRecord *prec);
 
 static void enterValue( throttleRecord *prec);
 static void delayFuncCallback();
@@ -128,7 +128,7 @@ static long init_record(void *precord,int pass)
   prec->val = 0;
 
   prpvt = prec->rpvt;
-  prpvt->delay = prec->delay;
+  prpvt->delay = prec->dly;
 
   /* start link management */
 
@@ -179,6 +179,7 @@ static long init_record(void *precord,int pass)
 static long process(throttleRecord *prec)
 {
   rpvtStruct *prpvt = prec->rpvt;
+  unsigned short  monitor_mask;
 
   prec->pact = TRUE;
   prec->udf = FALSE;
@@ -189,6 +190,15 @@ static long process(throttleRecord *prec)
       checkLink(prec);
     }
   enterValue( prec);
+
+  monitor_mask = recGblResetAlarms(prec);
+  if(prec->oval != prec->val) 
+    {
+      monitor_mask |= DBE_VALUE|DBE_LOG;
+      prec->oval = prec->val;
+    }
+  if(monitor_mask)
+    db_post_events(prec,&prec->val,monitor_mask);
 
   /* process the forward scan link record */
   recGblFwdLink(prec);
@@ -255,6 +265,14 @@ static long special(DBADDR *paddr, int after)
 
     case(throttleRecordDLY):
       prpvt->delay = prec->dly;
+      
+      if(prpvt->delay_flag == 1)
+        {
+          // in case the delay was set crazy big, 
+          // this kills it and restarts it with new value
+          callbackCancelDelayed(&prpvt->delayFuncCb);
+          callbackRequestDelayed(&prpvt->delayFuncCb, prpvt->delay);
+        }
       break;
 
     default:
@@ -296,30 +314,30 @@ static void checkAlarms(throttleRecord *prec)
 }
 
 
-static void monitor(throttleRecord *prec)
-{
-    unsigned short  monitor_mask;
+/* static void monitor(throttleRecord *prec) */
+/* { */
+/*     unsigned short  monitor_mask; */
 
 
-    monitor_mask = recGblResetAlarms(prec);
-    if(prec->oval != prec->val) 
-      {
-	monitor_mask |= DBE_VALUE|DBE_LOG;
-	prec->oval = prec->val;
-      }
-    if(monitor_mask)
-	db_post_events(prec,&prec->val,monitor_mask);
+/*     monitor_mask = recGblResetAlarms(prec); */
+/*     if(prec->oval != prec->val)  */
+/*       { */
+/* 	monitor_mask |= DBE_VALUE|DBE_LOG; */
+/* 	prec->oval = prec->val; */
+/*       } */
+/*     if(monitor_mask) */
+/* 	db_post_events(prec,&prec->val,monitor_mask); */
 
-    if(prec->osent != prec->sent) 
-      {
-	monitor_mask |= DBE_VALUE|DBE_LOG;
-	prec->osent = prec->sent;
-      }
-    if(monitor_mask)
-	db_post_events(prec,&prec->sent,monitor_mask);
+/*     if(prec->osent != prec->sent)  */
+/*       { */
+/* 	monitor_mask |= DBE_VALUE|DBE_LOG; */
+/* 	prec->osent = prec->sent; */
+/*       } */
+/*     if(monitor_mask) */
+/* 	db_post_events(prec,&prec->sent,monitor_mask); */
 
-    return;
-}
+/*     return; */
+/* } */
 
 
 static void enterValue( throttleRecord *prec)
@@ -347,6 +365,7 @@ static void delayFuncCallback(CALLBACK *pcallback)
 static void valuePut( throttleRecord *prec)
 {
   rpvtStruct *prpvt = prec->rpvt;
+  unsigned short  monitor_mask;
 
   struct link *plink;
 
@@ -387,8 +406,16 @@ static void valuePut( throttleRecord *prec)
   recGblGetTimeStamp(prec);
   /* check for alarms */
   checkAlarms(prec);
+
   /* check event list */
-  monitor(prec);
+  monitor_mask = recGblResetAlarms(prec);
+  if(prec->osent != prec->sent) 
+    {
+      monitor_mask |= DBE_VALUE|DBE_LOG;
+      prec->osent = prec->sent;
+    }
+  if(monitor_mask)
+    db_post_events(prec,&prec->sent,monitor_mask);
 }
 
 

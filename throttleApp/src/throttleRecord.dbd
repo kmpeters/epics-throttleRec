@@ -64,7 +64,7 @@ recordtype(throttle) {
         field(DLY,DBF_DOUBLE) {
                 prompt("Delay value")
 		special(SPC_MOD)
-                initial("1.0")
+                initial("0.0")
         }
 
 	field(OUT,DBF_OUTLINK) {
