@@ -1,0 +1,17 @@
+record(ao, $(P)ao1)
+{
+        field( PREC, "6")
+}
+record(ao, $(P)ao2)
+{
+        field( PREC, "6")
+}
+
+record(longout, $(P)lo1)
+{
+}
+record(longout, $(P)lo2)
+{
+}
+
+

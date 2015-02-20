@@ -1,0 +1,4 @@
+$(P)$(THR).PREC
+$(P)$(THR).DPREC
+$(P)$(THR).OUT
+$(P)$(THR).DLY

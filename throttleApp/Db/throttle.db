@@ -1,23 +1,8 @@
-record(ao, $(P)ao1)
-{
-        field( PREC, "6")
-}
-record(ao, $(P)ao2)
-{
-        field( PREC, "6")
-}
-
-record(longout, $(P)lo1)
-{
-}
-record(longout, $(P)lo2)
-{
-}
-
-
 record(throttle, "$(P)$(THR)")
 {
-	field( DESC, "throttle record")
-        field( PREC, "6")
-        field( DPREC, "3")
+	field( DESC,  "throttle record")
+        field( PREC,  "$(PREC=6)")
+        field( DPREC, "$(DPREC=3)")
+        field( OUT,   "$(OUT)")
+        field( DLY,   "$(DELAY=1.0)")
 }
