@@ -117,7 +117,7 @@ static long init_record(void *precord,int pass)
 
   if( pass == 0) 
     {
-      strcpy(prec->vers, VERSION);
+      strcpy(prec->ver, VERSION);
       prec->rpvt = calloc(1, sizeof(struct rpvtStruct));
 
       return 0;
@@ -264,7 +264,14 @@ static long special(DBADDR *paddr, int after)
       break;
 
     case(throttleRecordDLY):
-      prpvt->delay = prec->dly;
+      if( prec->dly < 0.0)
+        {
+          prpvt->delay = 0.0;
+          prec->dly = 0.0;
+          db_post_events(prec,&prec->dly,DBE_VALUE);
+        }
+      else
+        prpvt->delay = prec->dly;
       
       if(prpvt->delay_flag == 1)
         {

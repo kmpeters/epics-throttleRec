@@ -29,7 +29,7 @@ recordtype(throttle) {
                 special(SPC_NOMOD)
         }
 
-        field(VERS,DBF_STRING) {
+        field(VER,DBF_STRING) {
                 prompt("Code Version")
                 special(SPC_NOMOD)
                 size(20)

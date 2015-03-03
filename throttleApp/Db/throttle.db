@@ -3,6 +3,6 @@ record(throttle, "$(P)$(THR)")
 	field( DESC,  "throttle record")
         field( PREC,  "$(PREC=6)")
         field( DPREC, "$(DPREC=3)")
-        field( OUT,   "$(OUT)")
+        field( OUT,   "$(OUT=)")
         field( DLY,   "$(DELAY=1.0)")
 }
