@@ -33,7 +33,7 @@
 #define LT_EPICSBASE(V,R,M,P) (EPICS_VERSION_INT < VERSION_INT((V),(R),(M),(P)))
 
 
-#define VERSION "0-0-1"
+#define VERSION "0-1-0"
 
 
 /* Create RSET - Record Support Entry Table */
@@ -98,6 +98,10 @@ typedef struct rpvtStruct
   int delay_flag;
   int wait_flag;
 
+  int limit_flag;
+  double limit_high;
+  double limit_low;
+
   CALLBACK delayFuncCb;
 
   CALLBACK checkLinkCb;
@@ -129,6 +133,14 @@ static long init_record(void *precord,int pass)
 
   prpvt = prec->rpvt;
   prpvt->delay = prec->dly;
+
+  prpvt->limit_high = prec->drvh;
+  prpvt->limit_low = prec->drvl;
+  if( prec->drvh > prec->drvl)
+    prpvt->limit_flag = 1;
+  else
+    prpvt->limit_flag = 0;
+
 
   /* start link management */
 
@@ -184,6 +196,33 @@ static long process(throttleRecord *prec)
   prec->pact = TRUE;
   prec->udf = FALSE;
 
+  if( prpvt->limit_flag)
+    {
+      int new_st;
+
+      if( prec->val < prpvt->limit_low)
+        {
+          prec->val = prpvt->limit_low;
+          db_post_events(prec,&prec->val,DBE_VALUE|DBE_LOG);
+          new_st = throttleDRVCS_CL;
+        }
+      else if( prec->val > prpvt->limit_high)
+        {
+          prec->val = prpvt->limit_high;
+          db_post_events(prec,&prec->val,DBE_VALUE|DBE_LOG);
+          new_st = throttleDRVCS_CL;
+        }
+      else // no clipping
+        new_st = throttleDRVCS_NOTCL;
+
+      // if status changed, propagate it
+      if( prec->drvcs != new_st)
+        {
+          prec->drvcs = new_st;
+          db_post_events(prec,&prec->drvcs,DBE_VALUE);
+        }
+    }
+
   /* if some links are CA, check connections */
   if (prpvt->caLinkStat != NO_CA_LINKS) 
     {
@@ -220,6 +259,8 @@ static long special(DBADDR *paddr, int after)
   struct link *plink;
   unsigned short    *plinkValid;
   struct dbAddr        dbAddr;
+
+  int new_st;
 
   
   if( !after) 
@@ -279,6 +320,35 @@ static long special(DBADDR *paddr, int after)
           // this kills it and restarts it with new value
           callbackCancelDelayed(&prpvt->delayFuncCb);
           callbackRequestDelayed(&prpvt->delayFuncCb, prpvt->delay);
+        }
+      break;
+
+    case(throttleRecordDRVH):
+    case(throttleRecordDRVL):
+
+      prpvt->limit_high = prec->drvh;
+      prpvt->limit_low = prec->drvl;
+      if( prec->drvh <= prec->drvl)
+        {
+          prpvt->limit_flag = 0;
+
+          new_st = throttleDRVCS_NOTCL;
+        }
+      else
+        {
+          prpvt->limit_flag = 1;
+        
+          if((prec->val < prpvt->limit_low) || (prec->val > prpvt->limit_high))
+            new_st = throttleDRVCS_CL;
+          else
+            new_st = throttleDRVCS_NOTCL;
+        }
+
+      // set status flag 
+      if( prec->drvcs != new_st)
+        {
+          prec->drvcs = new_st;
+          db_post_events(prec,&prec->drvcs,DBE_VALUE);
         }
       break;
 

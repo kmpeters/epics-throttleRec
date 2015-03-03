@@ -1,3 +1,7 @@
+menu(throttleDRVCS) {
+        choice(throttleDRVCS_NOTCL,"Not Clipped")
+        choice(throttleDRVCS_CL,"Clipped")
+}
 menu(throttleSTS) {
         choice(throttleSTS_UNK,"Unknown")
         choice(throttleSTS_ERR,"Error")
@@ -27,6 +31,24 @@ recordtype(throttle) {
         field(OSENT,DBF_DOUBLE) {
                 prompt("Previous Sent Value")
                 special(SPC_NOMOD)
+        }
+
+        field(DRVH,DBF_DOUBLE) {
+                prompt("High Limit")
+                special(SPC_MOD)
+                initial("0.0")
+        }
+        field(DRVL,DBF_DOUBLE) {
+                prompt("Low Limit")
+                special(SPC_MOD)
+                initial("0.0")
+        }
+        field(DRVCS,DBF_MENU) {
+		prompt("Clipped Status")
+		special(SPC_NOMOD)
+		interest(1)
+		menu(throttleDRVCS)
+		initial("0")
         }
 
         field(VER,DBF_STRING) {
