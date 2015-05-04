@@ -295,3 +295,20 @@ text {
 	textix="High Limit"
 	align="horiz. right"
 }
+text {
+	object {
+		x=205
+		y=40
+		width=60
+		height=20
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(THR).BUSY"
+	}
+	textix="BUSY"
+	align="horiz. centered"
+}

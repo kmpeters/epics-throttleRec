@@ -1,3 +1,7 @@
+menu(throttleBUSY) {
+        choice(throttleBUSY_FALSE,"False")
+        choice(throttleBUSY_TRUE,"True")
+}
 menu(throttleDRVCS) {
         choice(throttleDRVCS_NOTCL,"Not Clipped")
         choice(throttleDRVCS_CL,"Clipped")
@@ -31,6 +35,14 @@ recordtype(throttle) {
         field(OSENT,DBF_DOUBLE) {
                 prompt("Previous Sent Value")
                 special(SPC_NOMOD)
+        }
+
+        field(BUSY,DBF_MENU) {
+		prompt("Busy")
+		special(SPC_NOMOD)
+		interest(1)
+		menu(throttleBUSY)
+		initial("0")
         }
 
         field(DRVH,DBF_DOUBLE) {
