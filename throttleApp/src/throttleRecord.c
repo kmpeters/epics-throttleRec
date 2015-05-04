@@ -240,7 +240,7 @@ static long process(throttleRecord *prec)
     db_post_events(prec,&prec->val,monitor_mask);
 
   /* process the forward scan link record */
-  recGblFwdLink(prec);
+  /* recGblFwdLink(prec); */
 
   prec->pact=FALSE;
   return 0;
@@ -467,6 +467,9 @@ static void valuePut( throttleRecord *prec)
             }
           else
             prec->sts = throttleSTS_ERR;
+
+          // NOW process forward link!
+          recGblFwdLink(prec);
         }
       else
         prec->sts = throttleSTS_ERR;
