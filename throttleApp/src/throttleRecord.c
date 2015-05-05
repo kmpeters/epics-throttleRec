@@ -480,7 +480,14 @@ static void valuePut( throttleRecord *prec)
           recGblFwdLink(prec);
         }
       else
-        prec->sts = throttleSTS_ERR;
+        {
+          prec->sts = throttleSTS_ERR;
+
+          prec->wait = FALSE;
+          db_post_events(prec,&prec->wait,DBE_VALUE);
+        }
+
+      db_post_events(prec,&prec->sts,DBE_VALUE);
 
       prpvt->wait_flag = 0;
       prpvt->delay_flag = 1;

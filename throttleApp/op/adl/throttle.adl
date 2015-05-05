@@ -329,3 +329,21 @@ rectangle {
 		chan="$(P)$(THR).DRVLS"
 	}
 }
+text {
+	object {
+		x=205
+		y=10
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="A==1"
+		chan="$(P)$(THR).STS"
+	}
+	textix="Error"
+	align="horiz. centered"
+}
