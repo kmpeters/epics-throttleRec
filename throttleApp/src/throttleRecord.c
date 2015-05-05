@@ -134,9 +134,9 @@ static long init_record(void *precord,int pass)
   prpvt = prec->rpvt;
   prpvt->delay = prec->dly;
 
-  prpvt->limit_high = prec->drvh;
-  prpvt->limit_low = prec->drvl;
-  if( prec->drvh > prec->drvl)
+  prpvt->limit_high = prec->drvlh;
+  prpvt->limit_low = prec->drvll;
+  if( prec->drvlh > prec->drvll)
     prpvt->limit_flag = 1;
   else
     prpvt->limit_flag = 0;
@@ -207,22 +207,22 @@ static long process(throttleRecord *prec)
         {
           prec->val = prpvt->limit_low;
           db_post_events(prec,&prec->val,DBE_VALUE|DBE_LOG);
-          new_st = throttleDRVCS_CL;
+          new_st = throttleDRVLS_LOW;
         }
       else if( prec->val > prpvt->limit_high)
         {
           prec->val = prpvt->limit_high;
           db_post_events(prec,&prec->val,DBE_VALUE|DBE_LOG);
-          new_st = throttleDRVCS_CL;
+          new_st = throttleDRVLS_HIGH;
         }
       else // no clipping
-        new_st = throttleDRVCS_NOTCL;
+        new_st = throttleDRVLS_NORM;
 
       // if status changed, propagate it
-      if( prec->drvcs != new_st)
+      if( prec->drvls != new_st)
         {
-          prec->drvcs = new_st;
-          db_post_events(prec,&prec->drvcs,DBE_VALUE);
+          prec->drvls = new_st;
+          db_post_events(prec,&prec->drvls,DBE_VALUE);
         }
     }
 
@@ -326,32 +326,34 @@ static long special(DBADDR *paddr, int after)
         }
       break;
 
-    case(throttleRecordDRVH):
-    case(throttleRecordDRVL):
+    case(throttleRecordDRVLH):
+    case(throttleRecordDRVLL):
 
-      prpvt->limit_high = prec->drvh;
-      prpvt->limit_low = prec->drvl;
-      if( prec->drvh <= prec->drvl)
+      prpvt->limit_high = prec->drvlh;
+      prpvt->limit_low = prec->drvll;
+      if( prec->drvlh <= prec->drvll)
         {
           prpvt->limit_flag = 0;
 
-          new_st = throttleDRVCS_NOTCL;
+          new_st = throttleDRVLS_NORM;
         }
       else
         {
           prpvt->limit_flag = 1;
         
-          if((prec->val < prpvt->limit_low) || (prec->val > prpvt->limit_high))
-            new_st = throttleDRVCS_CL;
+          if(prec->val < prpvt->limit_low) 
+            new_st = throttleDRVLS_LOW;
+          else if(prec->val > prpvt->limit_high)
+            new_st = throttleDRVLS_HIGH;
           else
-            new_st = throttleDRVCS_NOTCL;
+            new_st = throttleDRVLS_NORM;
         }
 
       // set status flag 
-      if( prec->drvcs != new_st)
+      if( prec->drvls != new_st)
         {
-          prec->drvcs = new_st;
-          db_post_events(prec,&prec->drvcs,DBE_VALUE);
+          prec->drvls = new_st;
+          db_post_events(prec,&prec->drvls,DBE_VALUE);
         }
       break;
 

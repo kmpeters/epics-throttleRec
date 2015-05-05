@@ -2,9 +2,10 @@ menu(throttleWAIT) {
         choice(throttleWAIT_FALSE,"False")
         choice(throttleWAIT_TRUE,"True")
 }
-menu(throttleDRVCS) {
-        choice(throttleDRVCS_NOTCL,"Not Clipped")
-        choice(throttleDRVCS_CL,"Clipped")
+menu(throttleDRVLS) {
+        choice(throttleDRVLS_NORM,"Normal")
+        choice(throttleDRVLS_LOW,"Low Limit")
+        choice(throttleDRVLS_HIGH,"High Limit")
 }
 menu(throttleSTS) {
         choice(throttleSTS_UNK,"Unknown")
@@ -28,7 +29,7 @@ recordtype(throttle) {
                 special(SPC_NOMOD)
                 interest(3)
         }
-        field(SENT,DBF_DOUBLE   ) {
+        field(SENT,DBF_DOUBLE) {
                 prompt("Sent Value")
                 special(SPC_NOMOD)
         }
@@ -45,21 +46,21 @@ recordtype(throttle) {
 		initial("0")
         }
 
-        field(DRVH,DBF_DOUBLE) {
+        field(DRVLH,DBF_DOUBLE) {
                 prompt("High Limit")
                 special(SPC_MOD)
                 initial("0.0")
         }
-        field(DRVL,DBF_DOUBLE) {
+        field(DRVLL,DBF_DOUBLE) {
                 prompt("Low Limit")
                 special(SPC_MOD)
                 initial("0.0")
         }
-        field(DRVCS,DBF_MENU) {
-		prompt("Clipped Status")
+        field(DRVLS,DBF_MENU) {
+		prompt("Limit Status")
 		special(SPC_NOMOD)
 		interest(1)
-		menu(throttleDRVCS)
+		menu(throttleDRVLS)
 		initial("0")
         }
 

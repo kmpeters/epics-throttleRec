@@ -180,8 +180,8 @@ text {
 }
 "text entry" {
 	object {
-		x=82
-		y=37
+		x=80
+		y=40
 		width=100
 		height=20
 	}
@@ -196,7 +196,7 @@ text {
 }
 text {
 	object {
-		x=10
+		x=5
 		y=40
 		width=60
 		height=20
@@ -209,7 +209,7 @@ text {
 }
 text {
 	object {
-		x=10
+		x=5
 		y=10
 		width=60
 		height=20
@@ -222,19 +222,19 @@ text {
 }
 rectangle {
 	object {
-		x=80
-		y=35
-		width=104
-		height=24
+		x=70
+		y=40
+		width=10
+		height=20
 	}
 	"basic attribute" {
 		clr=30
-		fill="outline"
 		width=2
 	}
 	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(THR).DRVCS"
+		vis="calc"
+		calc="A==1"
+		chan="$(P)$(THR).DRVLS"
 	}
 }
 "text entry" {
@@ -245,7 +245,7 @@ rectangle {
 		height=20
 	}
 	control {
-		chan="$(P)$(THR).DRVL"
+		chan="$(P)$(THR).DRVLL"
 		clr=14
 		bclr=51
 	}
@@ -274,7 +274,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(P)$(THR).DRVH"
+		chan="$(P)$(THR).DRVLH"
 		clr=14
 		bclr=51
 	}
@@ -297,7 +297,7 @@ text {
 }
 text {
 	object {
-		x=190
+		x=205
 		y=40
 		width=80
 		height=20
@@ -311,4 +311,21 @@ text {
 	}
 	textix="Waiting"
 	align="horiz. centered"
+}
+rectangle {
+	object {
+		x=180
+		y=40
+		width=10
+		height=20
+	}
+	"basic attribute" {
+		clr=30
+		width=2
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="A==2"
+		chan="$(P)$(THR).DRVLS"
+	}
 }
