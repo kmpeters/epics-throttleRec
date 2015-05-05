@@ -196,8 +196,8 @@ static long process(throttleRecord *prec)
   prec->pact = TRUE;
   prec->udf = FALSE;
 
-  prec->busy = TRUE;
-  db_post_events(prec,&prec->busy,DBE_VALUE);
+  prec->wait = TRUE;
+  db_post_events(prec,&prec->wait,DBE_VALUE);
 
   if( prpvt->limit_flag)
     {
@@ -471,8 +471,8 @@ static void valuePut( throttleRecord *prec)
           else
             prec->sts = throttleSTS_ERR;
 
-          prec->busy = FALSE;
-          db_post_events(prec,&prec->busy,DBE_VALUE);
+          prec->wait = FALSE;
+          db_post_events(prec,&prec->wait,DBE_VALUE);
 
           // NOW process forward link!
           recGblFwdLink(prec);
