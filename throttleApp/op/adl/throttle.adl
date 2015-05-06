@@ -5,10 +5,10 @@ file {
 }
 display {
 	object {
-		x=535
-		y=275
+		x=523
+		y=286
 		width=300
-		height=200
+		height=280
 	}
 	clr=14
 	bclr=4
@@ -90,7 +90,7 @@ display {
 "text entry" {
 	object {
 		x=122
-		y=147
+		y=227
 		width=150
 		height=20
 	}
@@ -106,7 +106,7 @@ display {
 rectangle {
 	object {
 		x=120
-		y=145
+		y=225
 		width=154
 		height=24
 	}
@@ -124,7 +124,7 @@ rectangle {
 text {
 	object {
 		x=35
-		y=145
+		y=225
 		width=80
 		height=20
 	}
@@ -137,7 +137,7 @@ text {
 "text entry" {
 	object {
 		x=120
-		y=175
+		y=255
 		width=100
 		height=20
 	}
@@ -153,7 +153,7 @@ text {
 text {
 	object {
 		x=35
-		y=175
+		y=255
 		width=80
 		height=20
 	}
@@ -240,7 +240,7 @@ rectangle {
 "text entry" {
 	object {
 		x=120
-		y=115
+		y=195
 		width=100
 		height=20
 	}
@@ -256,7 +256,7 @@ rectangle {
 text {
 	object {
 		x=35
-		y=115
+		y=195
 		width=80
 		height=20
 	}
@@ -269,7 +269,7 @@ text {
 "text entry" {
 	object {
 		x=120
-		y=85
+		y=165
 		width=100
 		height=20
 	}
@@ -285,7 +285,7 @@ text {
 text {
 	object {
 		x=35
-		y=85
+		y=165
 		width=80
 		height=20
 	}
@@ -346,4 +346,46 @@ text {
 	}
 	textix="Error"
 	align="horiz. centered"
+}
+"choice button" {
+	object {
+		x=120
+		y=135
+		width=160
+		height=24
+	}
+	control {
+		chan="$(P)$(THR).DRVLC"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+text {
+	object {
+		x=35
+		y=135
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Clipping"
+	align="horiz. right"
+}
+"message button" {
+	object {
+		x=125
+		y=85
+		width=85
+		height=27
+	}
+	control {
+		chan="$(P)$(THR).SYNC"
+		clr=14
+		bclr=51
+	}
+	label="Sync"
+	press_msg="1"
 }

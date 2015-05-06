@@ -85,6 +85,7 @@ static void checkAlarms(throttleRecord *prec);
 static void enterValue( throttleRecord *prec);
 static void delayFuncCallback();
 static void valuePut( throttleRecord *prec);
+static void valueSync( throttleRecord *prec);
 
 static void checkLinkCallback();
 static void checkLink();
@@ -96,6 +97,7 @@ typedef struct rpvtStruct
   double delay;
 
   int delay_flag;
+  int sync_flag;
   int wait_flag;
 
   int limit_flag;
@@ -170,6 +172,7 @@ static long init_record(void *precord,int pass)
   callbackSetUser(prec, &prpvt->delayFuncCb);
   prpvt->delay_flag = 0;
   prpvt->wait_flag = 0;
+  prpvt->sync_flag = 0;
 
   callbackSetCallback(checkLinkCallback, &prpvt->checkLinkCb);
   callbackSetPriority(prec->prio, &prpvt->checkLinkCb);
@@ -193,26 +196,36 @@ static long process(throttleRecord *prec)
   rpvtStruct *prpvt = prec->rpvt;
   unsigned short  monitor_mask;
 
+  int proc_flag = 1;
+
   prec->pact = TRUE;
   prec->udf = FALSE;
 
-  prec->wait = TRUE;
-  db_post_events(prec,&prec->wait,DBE_VALUE);
-
+ 
   if( prpvt->limit_flag)
     {
       int new_st;
 
       if( prec->val < prpvt->limit_low)
         {
-          prec->val = prpvt->limit_low;
-          db_post_events(prec,&prec->val,DBE_VALUE|DBE_LOG);
+          if( prec->drvlc == throttleDRVLC_ON)
+            {
+              prec->val = prpvt->limit_low;
+              db_post_events(prec,&prec->val,DBE_VALUE|DBE_LOG);
+            }
+          else
+            proc_flag = 0;
           new_st = throttleDRVLS_LOW;
         }
       else if( prec->val > prpvt->limit_high)
         {
-          prec->val = prpvt->limit_high;
-          db_post_events(prec,&prec->val,DBE_VALUE|DBE_LOG);
+          if( prec->drvlc == throttleDRVLC_ON)
+            {
+              prec->val = prpvt->limit_high;
+              db_post_events(prec,&prec->val,DBE_VALUE|DBE_LOG);
+            }
+          else
+            proc_flag = 0;
           new_st = throttleDRVLS_HIGH;
         }
       else // no clipping
@@ -226,12 +239,18 @@ static long process(throttleRecord *prec)
         }
     }
 
-  /* if some links are CA, check connections */
-  if (prpvt->caLinkStat != NO_CA_LINKS) 
+  if( proc_flag)
     {
-      checkLink(prec);
+      prec->wait = TRUE;
+      db_post_events(prec,&prec->wait,DBE_VALUE);
+
+     /* if some links are CA, check connections */
+      if (prpvt->caLinkStat != NO_CA_LINKS) 
+        {
+          checkLink(prec);
+        }
+      enterValue( prec);
     }
-  enterValue( prec);
 
   monitor_mask = recGblResetAlarms(prec);
   if(prec->oval != prec->val) 
@@ -306,7 +325,19 @@ static long special(DBADDR *paddr, int after)
       db_post_events(prec,plinkValid,DBE_VALUE|DBE_LOG);
 
       break;
+    case(throttleRecordSYNC):
+      if( prec->sync == throttleSYNC_IDLE)
+        break;
 
+      /* if some links are CA, check connections */
+      if (prpvt->caLinkStat != NO_CA_LINKS) 
+        {
+          printf("special\n");
+          checkLink(prec);
+        }
+      valueSync(prec);
+      
+      break;
     case(throttleRecordDLY):
       if( prec->dly < 0.0)
         {
@@ -457,6 +488,9 @@ static void valuePut( throttleRecord *prec)
 
   if( prpvt->wait_flag)
     {
+      // needs to be before valueSync()
+      prpvt->wait_flag = 0;
+
       /* Process output link. */
       plink = &(prec->out);
       if (plink->type != CONSTANT)
@@ -469,12 +503,16 @@ static void valuePut( throttleRecord *prec)
               prec->sts = throttleSTS_SUC;
               prec->sent = prpvt->oval;
               db_post_events(prec,&prec->sent,DBE_VALUE);
+
+              if(prpvt->sync_flag == 1)
+                valueSync(prec);
             }
           else
             prec->sts = throttleSTS_ERR;
 
           prec->wait = FALSE;
           db_post_events(prec,&prec->wait,DBE_VALUE);
+
 
           // NOW process forward link!
           recGblFwdLink(prec);
@@ -489,7 +527,6 @@ static void valuePut( throttleRecord *prec)
 
       db_post_events(prec,&prec->sts,DBE_VALUE);
 
-      prpvt->wait_flag = 0;
       prpvt->delay_flag = 1;
       callbackRequestDelayed(&prpvt->delayFuncCb, prpvt->delay);
     }
@@ -511,6 +548,52 @@ static void valuePut( throttleRecord *prec)
     }
   if(monitor_mask)
     db_post_events(prec,&prec->sent,monitor_mask);
+}
+
+
+static void valueSync( throttleRecord *prec)
+{
+  rpvtStruct *prpvt = prec->rpvt;
+  struct link *plink;
+
+  long status;
+
+  prpvt->sync_flag = 1;
+  
+  // will get set later
+  if(prpvt->wait_flag)
+    return;
+
+  plink = &(prec->out);
+  if (plink->type != CONSTANT)
+    {
+      status = dbGetLink(plink, DBR_DOUBLE, &prpvt->oval, NULL, NULL);
+      if( RTN_SUCCESS( status) )
+        {
+          prec->val = prpvt->oval;
+          db_post_events(prec,&prec->val,DBE_VALUE);
+
+          prec->sts = throttleSTS_SUC;
+        }
+      else
+        {
+          printf("sync 1\n");
+          prec->sts = throttleSTS_ERR;
+        }
+    }
+  else
+    {
+      printf("sync 2\n");
+      prec->sts = throttleSTS_ERR;
+    }
+
+  db_post_events(prec,&prec->sts,DBE_VALUE);
+
+  prec->sync = throttleSYNC_IDLE;
+  db_post_events(prec,&prec->sync,DBE_VALUE);
+
+
+  prpvt->sync_flag = 0;
 }
 
 

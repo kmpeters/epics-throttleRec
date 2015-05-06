@@ -18,6 +18,14 @@ menu(throttleOV) {
         choice(throttleOV_LOC,"Local PV")
         choice(throttleOV_CON,"Constant")
 }
+menu(throttleDRVLC) {
+        choice(throttleDRVLC_OFF,"Off")
+        choice(throttleDRVLC_ON,"On")
+}
+menu(throttleSYNC) {
+        choice(throttleSYNC_IDLE,"Idle")
+        choice(throttleSYNC_PROC,"Process")
+}
 recordtype(throttle) {
         include "dbCommon.dbd" 
         field(VAL,DBF_DOUBLE   ) {
@@ -61,6 +69,11 @@ recordtype(throttle) {
 		special(SPC_NOMOD)
 		interest(1)
 		menu(throttleDRVLS)
+		initial("0")
+        }
+        field(DRVLC,DBF_MENU) {
+		prompt("Limit Clipping")
+		menu(throttleDRVLC)
 		initial("0")
         }
 
@@ -114,6 +127,12 @@ recordtype(throttle) {
 		interest(1)
 		menu(throttleOV)
 		initial("1")
+	}
+	field(SYNC,DBF_MENU) {
+		prompt("Sync values")
+		special(SPC_MOD)
+		menu(throttleSYNC)
+		initial("0")
 	}
 
 }
