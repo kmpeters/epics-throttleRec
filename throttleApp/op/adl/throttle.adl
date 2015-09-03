@@ -1,13 +1,13 @@
 
 file {
-	name="/home/oxygen25/DOHNARMS/controls/epics/throttleRec/throttleApp/op/adl/throttle.adl"
+	name="/home/oxygen25/DOHNARMS/epics_modules/software/throttleRec/throttleApp/Db/../op/adl/throttle.adl"
 	version=030107
 }
 display {
 	object {
-		x=523
-		y=286
-		width=300
+		x=646
+		y=383
+		width=370
 		height=280
 	}
 	clr=14
@@ -87,87 +87,11 @@ display {
 		1a7309,
 	}
 }
-"text entry" {
-	object {
-		x=122
-		y=227
-		width=150
-		height=20
-	}
-	control {
-		chan="$(P)$(THR).OUT"
-		clr=14
-		bclr=51
-	}
-	format="string"
-	limits {
-	}
-}
-rectangle {
-	object {
-		x=120
-		y=225
-		width=154
-		height=24
-	}
-	"basic attribute" {
-		clr=20
-		fill="outline"
-		width=2
-	}
-	"dynamic attribute" {
-		vis="calc"
-		calc="(A == 0) || (A == 3)"
-		chan="$(P)$(THR).OV"
-	}
-}
-text {
-	object {
-		x=35
-		y=225
-		width=80
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Output PV"
-	align="horiz. right"
-}
-"text entry" {
-	object {
-		x=120
-		y=255
-		width=100
-		height=20
-	}
-	control {
-		chan="$(P)$(THR).DLY"
-		clr=14
-		bclr=51
-	}
-	format="string"
-	limits {
-	}
-}
-text {
-	object {
-		x=35
-		y=255
-		width=80
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Delay"
-	align="horiz. right"
-}
 "text update" {
 	object {
-		x=80
-		y=10
-		width=100
+		x=85
+		y=85
+		width=150
 		height=20
 	}
 	monitor {
@@ -175,14 +99,16 @@ text {
 		clr=14
 		bclr=55
 	}
+	align="horiz. centered"
+	format="exponential"
 	limits {
 	}
 }
 "text entry" {
 	object {
-		x=80
-		y=40
-		width=100
+		x=85
+		y=110
+		width=150
 		height=20
 	}
 	control {
@@ -190,14 +116,14 @@ text {
 		clr=14
 		bclr=51
 	}
-	format="string"
+	format="exponential"
 	limits {
 	}
 }
 text {
 	object {
-		x=5
-		y=40
+		x=10
+		y=110
 		width=60
 		height=20
 	}
@@ -209,8 +135,8 @@ text {
 }
 text {
 	object {
-		x=5
-		y=10
+		x=10
+		y=85
 		width=60
 		height=20
 	}
@@ -222,8 +148,8 @@ text {
 }
 rectangle {
 	object {
-		x=70
-		y=40
+		x=75
+		y=110
 		width=10
 		height=20
 	}
@@ -239,9 +165,9 @@ rectangle {
 }
 "text entry" {
 	object {
-		x=120
-		y=195
-		width=100
+		x=80
+		y=250
+		width=150
 		height=20
 	}
 	control {
@@ -249,28 +175,28 @@ rectangle {
 		clr=14
 		bclr=51
 	}
-	format="string"
+	format="exponential"
 	limits {
 	}
 }
 text {
 	object {
-		x=35
-		y=195
-		width=80
+		x=20
+		y=250
+		width=50
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="Low Limit"
+	textix="Low"
 	align="horiz. right"
 }
 "text entry" {
 	object {
-		x=120
-		y=165
-		width=100
+		x=80
+		y=225
+		width=150
 		height=20
 	}
 	control {
@@ -278,27 +204,27 @@ text {
 		clr=14
 		bclr=51
 	}
-	format="string"
+	format="exponential"
 	limits {
 	}
 }
 text {
 	object {
-		x=35
-		y=165
-		width=80
+		x=20
+		y=225
+		width=50
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="High Limit"
+	textix="High"
 	align="horiz. right"
 }
 text {
 	object {
-		x=205
-		y=40
+		x=265
+		y=110
 		width=80
 		height=20
 	}
@@ -314,8 +240,8 @@ text {
 }
 rectangle {
 	object {
-		x=180
-		y=40
+		x=235
+		y=110
 		width=10
 		height=20
 	}
@@ -331,8 +257,8 @@ rectangle {
 }
 text {
 	object {
-		x=205
-		y=10
+		x=265
+		y=85
 		width=80
 		height=20
 	}
@@ -349,22 +275,21 @@ text {
 }
 "choice button" {
 	object {
-		x=120
-		y=135
-		width=160
-		height=24
+		x=280
+		y=225
+		width=50
+		height=48
 	}
 	control {
 		chan="$(P)$(THR).DRVLC"
 		clr=14
 		bclr=51
 	}
-	stacking="column"
 }
 text {
 	object {
-		x=35
-		y=135
+		x=270
+		y=200
 		width=80
 		height=20
 	}
@@ -374,11 +299,86 @@ text {
 	textix="Clipping"
 	align="horiz. right"
 }
+"text entry" {
+	object {
+		x=17
+		y=37
+		width=200
+		height=20
+	}
+	control {
+		chan="$(P)$(THR).OUT"
+		clr=14
+		bclr=51
+	}
+	format="string"
+	limits {
+	}
+}
+rectangle {
+	object {
+		x=15
+		y=35
+		width=204
+		height=24
+	}
+	"basic attribute" {
+		clr=20
+		fill="outline"
+		width=2
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="(A == 0) || (A == 3)"
+		chan="$(P)$(THR).OV"
+	}
+}
+text {
+	object {
+		x=75
+		y=10
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Output"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=260
+		y=35
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(THR).DLY"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=265
+		y=10
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Delay (s)"
+	align="horiz. right"
+}
 "message button" {
 	object {
-		x=125
-		y=85
-		width=85
+		x=20
+		y=150
+		width=50
 		height=27
 	}
 	control {
@@ -388,4 +388,102 @@ text {
 	}
 	label="Sync"
 	press_msg="1"
+}
+"text entry" {
+	object {
+		x=137
+		y=155
+		width=200
+		height=20
+	}
+	control {
+		chan="$(P)$(THR).SINP"
+		clr=14
+		bclr=51
+	}
+	format="string"
+	limits {
+	}
+}
+rectangle {
+	object {
+		x=135
+		y=153
+		width=204
+		height=24
+	}
+	"basic attribute" {
+		clr=20
+		fill="outline"
+		width=2
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="(A == 0) || (A == 3)"
+		chan="$(P)$(THR).SIV"
+	}
+}
+text {
+	object {
+		x=80
+		y=153
+		width=50
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Input"
+	align="horiz. right"
+}
+text {
+	object {
+		x=110
+		y=200
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Limits"
+	align="horiz. right"
+}
+polyline {
+	object {
+		x=0
+		y=70
+		width=361
+		height=2
+	}
+	"basic attribute" {
+		clr=14
+		width=2
+	}
+	"dynamic attribute" {
+		chan="$(P)$(THR).DLY"
+	}
+	points {
+		(1,71)
+		(360,71)
+	}
+}
+polyline {
+	object {
+		x=0
+		y=190
+		width=361
+		height=2
+	}
+	"basic attribute" {
+		clr=14
+		width=2
+	}
+	"dynamic attribute" {
+		chan="$(P)$(THR).DLY"
+	}
+	points {
+		(1,191)
+		(360,191)
+	}
 }
