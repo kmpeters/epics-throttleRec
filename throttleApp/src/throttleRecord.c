@@ -51,7 +51,7 @@ static long get_precision();
 #define get_enum_str NULL
 #define get_enum_strs NULL
 #define put_enum_str NULL
-#define get_graphic_double NULL
+static long get_graphic_double(DBADDR *, struct dbr_grDouble *);
 #define get_control_double NULL
 #define get_alarm_double NULL
  
@@ -446,6 +446,17 @@ static long get_precision(dbAddr *paddr, long *precision)
   recGblGetPrec(paddr,precision);
 
   return 0;
+}
+
+static long get_graphic_double(DBADDR *paddr,struct dbr_grDouble *pgd)
+{
+    throttleRecord	*prec=(throttleRecord *)paddr->precord;
+
+    if(paddr->pfield==(void *)&prec->val){
+        pgd->upper_disp_limit = prec->hopr;
+        pgd->lower_disp_limit = prec->lopr;
+    } else recGblGetGraphicDouble(paddr,pgd);
+    return(0);
 }
 
 static void checkAlarms(throttleRecord *prec)

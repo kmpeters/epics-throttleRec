@@ -54,6 +54,16 @@ recordtype(throttle) {
 		initial("0")
         }
 
+	field(HOPR,DBF_DOUBLE) {
+		prompt("High Operating Range")
+		promptgroup(GUI_DISPLAY)
+		interest(1)
+	}
+	field(LOPR,DBF_DOUBLE) {
+		prompt("Low Operating Range")
+		promptgroup(GUI_DISPLAY)
+		interest(1)
+	}
         field(DRVLH,DBF_DOUBLE) {
                 prompt("High Limit")
                 special(SPC_MOD)
